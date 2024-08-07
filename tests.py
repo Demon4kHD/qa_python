@@ -1,24 +1,51 @@
 from main import BooksCollector
+import pytest
 
-# класс TestBooksCollector объединяет набор тестов, которыми мы покрываем наше приложение BooksCollector
-# обязательно указывать префикс Test
 class TestBooksCollector:
 
-    # пример теста:
-    # обязательно указывать префикс test_
-    # дальше идет название метода, который тестируем add_new_book_
-    # затем, что тестируем add_two_books - добавление двух книг
-    def test_add_new_book_add_two_books(self):
-        # создаем экземпляр (объект) класса BooksCollector
-        collector = BooksCollector()
+    @pytest.fixture(autouse=True)
+    def collector(self):
+        self.collector = BooksCollector()
+        return self.collector
 
-        # добавляем две книги
-        collector.add_new_book('Гордость и предубеждение и зомби')
-        collector.add_new_book('Что делать, если ваш кот хочет вас убить')
+    def test_add_valid_book_true(self):
+        # Создание пустого списка и добавление книги с валидным названием в созданный список
+        self.collector.add_new_book('Гордость и предубеждение и зомби')
+        assert len(self.collector.get_books_genre()) == 1
 
-        # проверяем, что добавилось именно две
-        # словарь books_rating, который нам возвращает метод get_books_rating, имеет длину 2
-        assert len(collector.get_books_rating()) == 2
+    positive_name_list = ['t', 'V.', 'Женщина с бумажными цветами', 'Рассказы о веселых людях,хорошей погоде', 'Рассказы о веселых людях, хорошей погоде']
 
-    # напиши свои тесты ниже
-    # чтобы тесты были независимыми в каждом из них создавай отдельный экземпляр класса BooksCollector()
+    @pytest.mark.parametrize('name', positive_name_list)
+    def test_add_books_with_valid_length(self, name):
+        # Добавление книг с валидной длиной имени
+        self.collector.add_new_book(name)
+        assert self.collector.get_book_genre(name) is ''
+        assert len(self.collector.get_books_genre()) in range(1, 6)
+
+    negative_name_list = ['', 'Рассказы о веселых людях и хорошей погоде', 'Рассказы о веселых людях и хорошей погоде', 'Иллюзия «Я», или Игры, в которые играет с нами мозг']
+
+    @pytest.mark.parametrize('name', negative_name_list)
+    def test_add_books_with_not_valid_length(self, name):
+        # Добавление книг с невалидной длиной имени
+        self.collector.add_new_book(name)
+        assert len(self.collector.get_books_genre()) == 0
+
+    def test_add_books_genre_valid_genre(self, add_genre_in_collectors_of_books):
+        self.new_collector = add_genre_in_collectors_of_books
+        books_genre = self.new_collector.get_books_genre()
+        books_list = {'t': 'Фантастика', 'V.': 'Детективы', 'Мастер и Маргарита': 'Мультфильмы', 'Преступление и наказание': 'Ужасы', 'Женщина с бумажными цветами': 'Комедии'}
+        for name in books_genre:
+            assert books_genre[name] == books_list[name]
+
+    def test_get_books_with_specific_genre(self, add_genre_in_collectors_of_books):
+        self.new_collector = add_genre_in_collectors_of_books
+        books_genre = self.new_collector.get_books_genre()
+        for name in books_genre:
+            genre = books_genre[name]
+            lst_genre = self.new_collector.get_books_with_specific_genre(genre)
+            assert name in lst_genre
+
+
+
+
+
